@@ -1,0 +1,36 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "LUXA token entry",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["chain_id", "type", "contract", "symbol", "name", "decimals", "description", "logo", "pool"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "chain_id": { "const": "luxa-1" },
+    "type": { "const": "cw20" },
+    "contract": { "type": "string", "pattern": "^luxa1[a-z0-9]{38,58}$" },
+    "symbol": { "type": "string", "pattern": "^[A-Z0-9]{2,10}$" },
+    "name": { "type": "string", "minLength": 2, "maxLength": 40 },
+    "decimals": { "type": "integer", "minimum": 0, "maximum": 18 },
+    "description": { "type": "string", "minLength": 10, "maxLength": 280 },
+    "logo": { "const": "logo.png" },
+    "website": { "type": "string", "pattern": "^https://[^\\s]+$" },
+    "socials": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "twitter": { "type": "string", "pattern": "^https://[^\\s]+$" },
+        "telegram": { "type": "string", "pattern": "^https://[^\\s]+$" },
+        "discord": { "type": "string", "pattern": "^https://[^\\s]+$" },
+        "github": { "type": "string", "pattern": "^https://[^\\s]+$" }
+      }
+    },
+    "tags": { "type": "array", "maxItems": 5, "items": { "type": "string", "pattern": "^[a-z0-9-]{2,20}$" } },
+    "pool": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["contract"],
+      "properties": { "contract": { "type": "string", "pattern": "^luxa1[a-z0-9]{38,58}$" } }
+    }
+  }
+}

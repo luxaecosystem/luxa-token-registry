@@ -1,0 +1,11 @@
+{
+  "chainId": "luxa-1",
+  "rest": "https://api.luxaecosystem.xyz",
+  "rawBase": "https://raw.githubusercontent.com/luxaecosystem/luxa-token-registry/main/tokens",
+  "cw20CodeId": 2,
+  "pairCodeId": 1,
+  "quoteDenom": "uluxa",
+  "minQuoteReserveMicro": "100000000",
+  "maxLogoBytes": 102400,
+  "reservedSymbols": ["LUXA", "SHARD", "SHARDS"]
+}

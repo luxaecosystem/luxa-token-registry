@@ -1,0 +1,20 @@
+{
+  "$schema": "../../schema/token.schema.json",
+  "chain_id": "luxa-1",
+  "type": "cw20",
+  "contract": "luxa1REPLACE_WITH_YOUR_CW20_CONTRACT_ADDRESS",
+  "symbol": "EXAMPLE",
+  "name": "Example Token",
+  "decimals": 6,
+  "description": "One or two sentences about what this token is for.",
+  "logo": "logo.png",
+  "website": "https://example.com",
+  "socials": {
+    "twitter": "https://x.com/example",
+    "telegram": "https://t.me/example"
+  },
+  "tags": ["community"],
+  "pool": {
+    "contract": "luxa1REPLACE_WITH_YOUR_POOL_CONTRACT_ADDRESS"
+  }
+}

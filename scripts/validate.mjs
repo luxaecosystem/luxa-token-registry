@@ -33,7 +33,6 @@ function checkLogo(who, dir, t) {
   const isPng = buf.length >= 24 && buf.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]));
   if (!isPng || buf.subarray(12, 16).toString('ascii') !== 'IHDR') return fail(who, 'logo must be a real PNG file');
   if (buf.length > cfg.maxLogoBytes) fail(who, `logo is ${buf.length} bytes, max ${cfg.maxLogoBytes}`);
-  // Width and height are read straight from the PNG header, so no image library is needed.
   const width = buf.readUInt32BE(16);
   const height = buf.readUInt32BE(20);
   if (width !== height) fail(who, `logo must be square (got ${width}x${height})`);
@@ -57,16 +56,23 @@ async function checkChain(who, t) {
   const pc = (await rest(`/cosmwasm/wasm/v1/contract/${t.pool.contract}`)).contract_info;
   if (Number(pc.code_id) !== cfg.pairCodeId) fail(who, `pool uses code_id ${pc.code_id}, expected ${cfg.pairCodeId}`);
 
-  // ASSUMPTION: the pair contract answers {"pool":{}} with { assets: [{ info, amount }], total_share }.
-  // Adjust this query if your pair contract exposes reserves differently.
-  const pool = await smart(t.pool.contract, { pool: {} });
-  const assets = pool.assets || [];
-  const hasToken = assets.find((a) => a.info?.token?.contract_addr === t.contract);
-  const quote = assets.find((a) => a.info?.native_token?.denom === cfg.quoteDenom);
-  if (!hasToken) fail(who, 'pool does not contain this token');
-  if (!quote) fail(who, `pool is not paired with ${cfg.quoteDenom}`);
-  if (quote && BigInt(quote.amount) < BigInt(cfg.minQuoteReserveMicro)) {
-    fail(who, `pool holds ${quote.amount} ${cfg.quoteDenom}, minimum is ${cfg.minQuoteReserveMicro}`);
+  // Query pair_info on luxa-1 AMM pair contract: { token_a, token_b, reserve_a, reserve_b, total_lp_supply }
+  const pool = await smart(t.pool.contract, { pair_info: {} });
+  const isTokenA = pool.token_a === t.contract;
+  const isTokenB = pool.token_b === t.contract;
+  const isQuoteA = pool.token_a === cfg.quoteDenom;
+  const isQuoteB = pool.token_b === cfg.quoteDenom;
+
+  if (!isTokenA && !isTokenB) {
+    fail(who, `pool does not contain token ${t.contract} (found ${pool.token_a} / ${pool.token_b})`);
+  }
+  if (!isQuoteA && !isQuoteB) {
+    fail(who, `pool is not paired with ${cfg.quoteDenom} (found ${pool.token_a} / ${pool.token_b})`);
+  }
+
+  const quoteReserve = isQuoteA ? pool.reserve_a : isQuoteB ? pool.reserve_b : '0';
+  if ((isQuoteA || isQuoteB) && BigInt(quoteReserve || '0') < BigInt(cfg.minQuoteReserveMicro)) {
+    fail(who, `pool holds ${quoteReserve} ${cfg.quoteDenom}, minimum is ${cfg.minQuoteReserveMicro}`);
   }
 }
 

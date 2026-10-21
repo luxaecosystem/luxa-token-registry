@@ -4,7 +4,6 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import Ajv from 'ajv';
 import addFormats from 'ajv-formats';
-import imageSize from 'image-size';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const cfg = JSON.parse(fs.readFileSync(path.join(ROOT, 'registry.config.json'), 'utf8'));
@@ -31,10 +30,12 @@ function checkLogo(who, dir, t) {
   const p = path.join(dir, t.logo);
   if (!fs.existsSync(p)) return fail(who, 'logo.png is missing');
   const buf = fs.readFileSync(p);
-  const isPng = buf.length > 8 && buf.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]));
-  if (!isPng) return fail(who, 'logo must be a real PNG file');
+  const isPng = buf.length >= 24 && buf.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]));
+  if (!isPng || buf.subarray(12, 16).toString('ascii') !== 'IHDR') return fail(who, 'logo must be a real PNG file');
   if (buf.length > cfg.maxLogoBytes) fail(who, `logo is ${buf.length} bytes, max ${cfg.maxLogoBytes}`);
-  const { width, height } = imageSize(buf);
+  // Width and height are read straight from the PNG header, so no image library is needed.
+  const width = buf.readUInt32BE(16);
+  const height = buf.readUInt32BE(20);
   if (width !== height) fail(who, `logo must be square (got ${width}x${height})`);
   if (width < 128 || width > 512) fail(who, `logo must be between 128 and 512 px (got ${width})`);
 }

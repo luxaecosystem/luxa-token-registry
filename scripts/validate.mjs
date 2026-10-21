@@ -87,6 +87,18 @@ for (const name of dirs) {
 
   let t;
   try { t = JSON.parse(fs.readFileSync(file, 'utf8')); } catch { fail(name, 'token.json is not valid JSON'); continue; }
+  if (!t || typeof t !== 'object' || Array.isArray(t)) {
+    if (!checkSchema(t)) {
+      for (const e of checkSchema.errors) fail(name, `schema: ${e.instancePath || '/'} ${e.message}`);
+    }
+    continue;
+  }
+  if (t.type !== 'cw20') {
+    fail(name, 'only CW20 smart contract tokens are allowed in this registry');
+  }
+  if (typeof t.contract !== 'string' || !t.contract.startsWith('luxa1')) {
+    fail(name, 'invalid CW20 contract address format');
+  }
   if (!checkSchema(t)) {
     for (const e of checkSchema.errors) fail(name, `schema: ${e.instancePath || '/'} ${e.message}`);
     continue;
